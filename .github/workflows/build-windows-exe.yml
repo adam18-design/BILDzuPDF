@@ -1,0 +1,82 @@
+name: Build Windows Program
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build EXE
+        run: |
+          pyinstaller --noconfirm --clean --onefile --windowed --name BILDzuPDF bild2pdf_gui.py
+
+      - name: Create portable package
+        shell: powershell
+        run: |
+          if (Test-Path "dist\BILDzuPDF-Portable") {
+            Remove-Item -Recurse -Force "dist\BILDzuPDF-Portable"
+          }
+          New-Item -ItemType Directory -Path "dist\BILDzuPDF-Portable" | Out-Null
+          Copy-Item "dist\BILDzuPDF.exe" "dist\BILDzuPDF-Portable\BILDzuPDF.exe"
+          Set-Content -Path "dist\BILDzuPDF-Portable\README-Windows.txt" -Value "Start: BILDzuPDF.exe`nBenutzerdaten: Es werden keine Systemdateien geaendert."
+          if (Test-Path "dist\BILDzuPDF-Portable.zip") {
+            Remove-Item -Force "dist\BILDzuPDF-Portable.zip"
+          }
+          Compress-Archive -Path "dist\BILDzuPDF-Portable\*" -DestinationPath "dist\BILDzuPDF-Portable.zip"
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Build installer
+        run: |
+          iscc installer\BILDzuPDF.iss
+
+      - name: Generate checksums
+        shell: powershell
+        run: |
+          certutil -hashfile dist\BILDzuPDF.exe SHA256 > dist\BILDzuPDF.exe.sha256.txt
+          certutil -hashfile dist\BILDzuPDF-Setup.exe SHA256 > dist\BILDzuPDF-Setup.exe.sha256.txt
+          certutil -hashfile dist\BILDzuPDF-Portable.zip SHA256 > dist\BILDzuPDF-Portable.zip.sha256.txt
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BILDzuPDF-windows-exe
+          path: dist/BILDzuPDF.exe
+          if-no-files-found: error
+
+      - name: Upload setup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BILDzuPDF-windows-setup
+          path: |
+            dist/BILDzuPDF-Setup.exe
+            dist/BILDzuPDF-Setup.exe.sha256.txt
+          if-no-files-found: error
+
+      - name: Upload portable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BILDzuPDF-windows-portable
+          path: |
+            dist/BILDzuPDF-Portable.zip
+            dist/BILDzuPDF-Portable.zip.sha256.txt
+            dist/BILDzuPDF.exe.sha256.txt
+          if-no-files-found: error
