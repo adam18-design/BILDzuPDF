@@ -1,5 +1,9 @@
 # BILDzuPDF
 
+**English summary:** BILDzuPDF ("image to PDF") is a small Python CLI tool and optional Windows desktop GUI that combines multiple image files (JPG, PNG, BMP, TIFF, WebP) into a single PDF document. It supports recursive directory scanning, customizable page order, and an optional email-compression mode that down-scales images and reduces JPEG quality to keep the resulting PDF small enough for email attachments.
+
+---
+
 Ein kleines CLI-Tool, das mehrere Bilddateien zu einer einzigen PDF zusammenfasst.
 
 Zusatz: Eine Desktop-GUI fuer Windows ist enthalten.
