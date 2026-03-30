@@ -77,6 +77,47 @@ class BildZuPdfApp:
         )
         ttk.Button(output_frame, text="Speicherort...", command=self.choose_output).pack(side="left")
 
+        compression_frame = ttk.LabelFrame(container, text="Komprimierung", padding=10)
+        compression_frame.pack(fill="x", pady=(0, 8))
+
+        self.compress_var = tk.BooleanVar(value=True)
+        self.quality_var = tk.IntVar(value=65)
+        self.max_dimension_var = tk.IntVar(value=1600)
+
+        ttk.Checkbutton(
+            compression_frame,
+            text="Fuer E-Mail komprimieren",
+            variable=self.compress_var,
+        ).grid(row=0, column=0, sticky="w", padx=(0, 12))
+
+        ttk.Label(compression_frame, text="Qualitaet:").grid(row=0, column=1, sticky="e")
+        ttk.Scale(
+            compression_frame,
+            from_=30,
+            to=95,
+            variable=self.quality_var,
+            orient="horizontal",
+            length=180,
+        ).grid(row=0, column=2, padx=(6, 6), sticky="w")
+        ttk.Label(compression_frame, textvariable=self.quality_var, width=3).grid(
+            row=0, column=3, sticky="w"
+        )
+
+        ttk.Label(compression_frame, text="Max. Kante:").grid(row=0, column=4, sticky="e", padx=(12, 0))
+        max_dimension_combo = ttk.Combobox(
+            compression_frame,
+            width=8,
+            state="readonly",
+            values=("1200", "1600", "2000", "2400"),
+        )
+        max_dimension_combo.grid(row=0, column=5, padx=(6, 0), sticky="w")
+        max_dimension_combo.set(str(self.max_dimension_var.get()))
+
+        def on_dimension_change(_: object) -> None:
+            self.max_dimension_var.set(int(max_dimension_combo.get()))
+
+        max_dimension_combo.bind("<<ComboboxSelected>>", on_dimension_change)
+
         footer = ttk.Frame(container)
         footer.pack(fill="x")
 
@@ -197,14 +238,23 @@ class BildZuPdfApp:
             output_path = output_path.with_suffix(".pdf")
 
         try:
-            convert_to_pdf(self.image_paths, output_path)
+            convert_to_pdf(
+                self.image_paths,
+                output_path,
+                compress=self.compress_var.get(),
+                quality=int(self.quality_var.get()),
+                max_dimension=int(self.max_dimension_var.get()),
+            )
         except (OSError, ValueError, UnidentifiedImageError) as exc:
             messagebox.showerror("Fehler", str(exc))
             return
 
+        file_size_mb = output_path.stat().st_size / (1024 * 1024)
+        compression_text = "ja" if self.compress_var.get() else "nein"
+
         messagebox.showinfo(
             "Erfolg",
-            f"PDF erfolgreich erstellt:\n{output_path}\n\nSeiten: {len(self.image_paths)}",
+            f"PDF erfolgreich erstellt:\n{output_path}\n\nSeiten: {len(self.image_paths)}\nKomprimiert: {compression_text}\nDateigroesse: {file_size_mb:.2f} MB",
         )
 
     def _update_count(self) -> None:

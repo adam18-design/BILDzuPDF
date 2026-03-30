@@ -34,6 +34,14 @@ Verzeichnis rekursiv durchsuchen:
 python3 bild2pdf.py bilder/ -r -o dokument.pdf
 ```
 
+PDF fuer E-Mail-Versand komprimieren:
+
+```bash
+python3 bild2pdf.py bilder/ -o dokument.pdf --compress --quality 65 --max-dimension 1600
+```
+
+Empfehlung fuer kleine Anhaenge: `--quality 60` bis `70` und `--max-dimension 1200` bis `1600`.
+
 ## GUI fuer Windows
 
 1. Python unter Windows installieren (inklusive Tkinter, bei Standardinstallation vorhanden).
@@ -53,6 +61,7 @@ In der GUI kannst du:
 - Bilder oder ganze Ordner hinzufuegen
 - die Reihenfolge der Seiten per "Nach oben" / "Nach unten" aendern
 - Zielpfad der PDF waehlen
+- E-Mail-Komprimierung aktivieren und Qualitaet/Aufloesung einstellen
 - per Klick auf "PDF erstellen" exportieren
 
 ### Fertiges Windows-Programm lokal bauen
